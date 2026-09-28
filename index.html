@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java 学习智能体 · 交互 Demo</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- 顶部：品牌 + 角色切换 -->
+    <header class="topbar" id="topbar"></header>
+
+    <div class="body">
+      <!-- 最左 Activity Bar -->
+      <nav class="activity" id="activity"></nav>
+      <!-- 左侧面板：会话 / 任务列表与功能入口 -->
+      <aside class="side" id="side"></aside>
+      <!-- 中间：智能体对话与任务执行主面板 -->
+      <main class="main" id="main"></main>
+      <!-- 右侧：可折叠上下文区 -->
+      <aside class="ctx" id="ctx"></aside>
+    </div>
+  </div>
+
+  <div id="overlay"></div>
+  <div class="toasts" id="toasts"></div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
