@@ -1,6 +1,7 @@
 package com.la.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.la.dto.request.ChangePasswordRequest;
 import com.la.dto.request.LoginRequest;
 import com.la.dto.request.RegisterRequest;
 import com.la.dto.response.AuthResponse;
@@ -59,6 +60,24 @@ public class AuthService {
             throw new BizException(401, "用户不存在");
         }
         return buildResponse(user, false);
+    }
+
+    /**
+     * 修改当前用户密码：校验原密码后以 BCrypt 重新哈希存储
+     */
+    public void changePassword(Long userId, ChangePasswordRequest req) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(401, "用户不存在");
+        }
+        if (!passwordEncoder.matches(req.getOldPassword(), user.getPasswordHash())) {
+            throw new BizException("原密码不正确");
+        }
+        if (req.getOldPassword().equals(req.getNewPassword())) {
+            throw new BizException("新密码不能与原密码相同");
+        }
+        user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
+        userMapper.updateById(user);
     }
 
     private AuthResponse buildResponse(User user, boolean withToken) {

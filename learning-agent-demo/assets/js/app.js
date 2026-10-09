@@ -1211,6 +1211,18 @@
       foot = `<button class="btn" data-act="closeModal">取消</button>
         <button class="btn primary" data-act="createSession" ${d.kp ? '' : 'disabled'}>${icon('sparkles', 15)} 创建并生成学习路径</button>`;
 
+    } else if (m.type === 'changePassword') {
+      title = '账号设置 · 修改密码';
+      body = `<div class="form-row"><label>原密码</label>
+          <input class="input" type="password" autocomplete="current-password" placeholder="请输入当前密码" value="${h(d.oldPwd || '')}" data-bind="modal" data-key="oldPwd"></div>
+        <div class="form-row"><label>新密码</label>
+          <input class="input" type="password" autocomplete="new-password" placeholder="6-50 位，建议字母 + 数字 + 符号组合" value="${h(d.newPwd || '')}" data-bind="modal" data-key="newPwd">
+          <div class="hint">长度 6-50 位</div></div>
+        <div class="form-row"><label>确认新密码</label>
+          <input class="input" type="password" autocomplete="new-password" placeholder="请再次输入新密码" value="${h(d.newPwd2 || '')}" data-bind="modal" data-key="newPwd2"></div>`;
+      foot = `<button class="btn" data-act="closeModal" ${d.busy ? 'disabled' : ''}>取消</button>
+        <button class="btn primary" data-act="doChangePassword" ${d.busy ? 'disabled' : ''}>${icon('check', 15)} ${d.busy ? '提交中…' : '确认修改'}</button>`;
+
     } else if (m.type === 'clearSessions') {
       title = '清空全部对话';
       body = `<div class="note" style="margin-bottom:12px">即将删除你的 <b>${DB.sessions.length}</b> 个学习会话及全部对话消息，<b style="color:var(--danger)">操作不可恢复</b>。你的练习记录、作业、知识掌握度等学习数据不受影响。</div>
@@ -1292,6 +1304,7 @@
       <div class="ctx-card"><h4>账号</h4>
         <div class="ctx-kv"><span>当前用户</span><span>${h(DB.me.realName || '')}（${DB.me.username || ''}）</span></div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <button class="btn sm" data-act="accountSettings">${icon('edit', 14)} 账号设置</button>
           <button class="btn sm danger" data-act="logout">${icon('x', 14)} 退出登录</button>
         </div>
       </div>`;
@@ -1395,6 +1408,26 @@
       loadSubmissions(v);
     },
     settings() { State.modal = { type: 'settings', data: {} }; renderOverlays(); },
+    accountSettings() {
+      State.modal = { type: 'changePassword', data: { oldPwd: '', newPwd: '', newPwd2: '', busy: false } };
+      renderOverlays();
+    },
+    async doChangePassword() {
+      const d = State.modal.data;
+      if (d.busy) return;
+      if (!d.oldPwd) { toast('请输入原密码'); return; }
+      if (!d.newPwd || d.newPwd.length < 6 || d.newPwd.length > 50) { toast('新密码长度需在 6-50 位之间'); return; }
+      if (d.newPwd !== d.newPwd2) { toast('两次输入的新密码不一致'); return; }
+      d.busy = true; renderOverlays();
+      try {
+        await API.post('/auth/change-password', { oldPassword: d.oldPwd, newPassword: d.newPwd });
+        State.modal = null; renderOverlays();
+        toast('密码修改成功，下次登录请使用新密码', 'ok');
+      } catch (e) {
+        d.busy = false; renderOverlays();
+        toast(e.message);
+      }
+    },
     closeModal() { State.modal = null; renderOverlays(); },
     maskClose(id, val, t) {
       // 只有点在遮罩本身（而非弹窗内容）上才关闭

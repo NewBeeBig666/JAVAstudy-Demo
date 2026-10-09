@@ -1,6 +1,7 @@
 package com.la.controller;
 
 import com.la.dto.ApiResponse;
+import com.la.dto.request.ChangePasswordRequest;
 import com.la.dto.request.LoginRequest;
 import com.la.dto.request.RegisterRequest;
 import com.la.dto.response.AuthResponse;
@@ -36,5 +37,12 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse<AuthResponse> me() {
         return ApiResponse.ok(authService.me(CurrentUser.id()));
+    }
+
+    @Operation(summary = "修改当前用户密码")
+    @PostMapping("/change-password")
+    public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req) {
+        authService.changePassword(CurrentUser.id(), req);
+        return ApiResponse.ok();
     }
 }
