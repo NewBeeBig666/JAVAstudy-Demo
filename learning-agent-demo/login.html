@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 · Java 学习智能体</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-mark" style="width:40px;height:40px">✦</div>
+        <div>
+          <div class="login-title">Java 学习智能体</div>
+          <div class="login-sub">本科软件工程（Java 方向）个性化学习伙伴</div>
+        </div>
+      </div>
+
+      <div class="login-tabs">
+        <button class="login-tab on" id="tabLogin" onclick="switchTab('login')">登录</button>
+        <button class="login-tab" id="tabReg" onclick="switchTab('reg')">注册</button>
+      </div>
+
+      <form id="loginForm" class="login-form" onsubmit="return doLogin(event)">
+        <div class="form-row"><label>用户名</label>
+          <input class="input" id="lgUser" placeholder="student / teacher" autocomplete="username"></div>
+        <div class="form-row"><label>密码</label>
+          <input class="input" id="lgPass" type="password" placeholder="123456" autocomplete="current-password"></div>
+        <button class="btn primary block" type="submit" id="lgBtn">登 录</button>
+        <div class="login-hint">
+          演示账号：<b>student / 123456</b>（学生·张明）· <b>teacher / 123456</b>（教师·陈老师）
+        </div>
+      </form>
+
+      <form id="regForm" class="login-form" style="display:none" onsubmit="return doRegister(event)">
+        <div class="form-row"><label>用户名</label>
+          <input class="input" id="rgUser" placeholder="字母 / 数字 / 下划线，3-30 位" autocomplete="username"></div>
+        <div class="form-row"><label>密码</label>
+          <input class="input" id="rgPass" type="password" placeholder="至少 6 位" autocomplete="new-password"></div>
+        <div class="form-row"><label>姓名</label>
+          <input class="input" id="rgName" placeholder="真实姓名"></div>
+        <div class="form-row"><label>角色</label>
+          <select class="select" id="rgRole">
+            <option value="STUDENT" selected>学生</option>
+            <option value="TEACHER">教师</option>
+          </select></div>
+        <div class="form-row"><label>学号（学生选填）</label>
+          <input class="input" id="rgNo" placeholder="如 2023211036"></div>
+        <button class="btn primary block" type="submit" id="rgBtn">注 册</button>
+      </form>
+
+      <div class="login-foot">MVP v0.1 · Spring Boot 3 + MySQL + DeepSeek</div>
+    </div>
+  </div>
+
+<script src="assets/js/auth.js"></script>
+<script>
+function switchTab(which) {
+  document.getElementById('tabLogin').className = 'login-tab' + (which === 'login' ? ' on' : '');
+  document.getElementById('tabReg').className = 'login-tab' + (which === 'reg' ? ' on' : '');
+  document.getElementById('loginForm').style.display = which === 'login' ? '' : 'none';
+  document.getElementById('regForm').style.display = which === 'reg' ? '' : 'none';
+}
+
+function setBtn(btn, text, disabled) {
+  btn.disabled = !!disabled;
+  btn.textContent = text;
+}
+
+async function api(path, body) {
+  const res = await fetch('/api' + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    body: JSON.stringify(body)
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok || !data || data.code !== 0) {
+    throw new Error((data && data.msg) || ('请求失败 (' + res.status + ')'));
+  }
+  return data.data;
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('lgBtn');
+  setBtn(btn, '登录中…', true);
+  try {
+    const r = await api('/auth/login', {
+      username: document.getElementById('lgUser').value.trim(),
+      password: document.getElementById('lgPass').value
+    });
+    Auth.save(r.token, r.user);
+    location.href = 'index.html';
+  } catch (err) {
+    alert(err.message);
+    setBtn(btn, '登 录', false);
+  }
+  return false;
+}
+
+async function doRegister(e) {
+  e.preventDefault();
+  const btn = document.getElementById('rgBtn');
+  setBtn(btn, '注册中…', true);
+  try {
+    const r = await api('/auth/register', {
+      username: document.getElementById('rgUser').value.trim(),
+      password: document.getElementById('rgPass').value,
+      realName: document.getElementById('rgName').value.trim(),
+      role: document.getElementById('rgRole').value,
+      studentNo: document.getElementById('rgNo').value.trim() || null,
+      classId: document.getElementById('rgRole').value === 'STUDENT' ? 1 : null
+    });
+    const r2 = await api('/auth/login', {
+      username: document.getElementById('rgUser').value.trim(),
+      password: document.getElementById('rgPass').value
+    });
+    Auth.save(r2.token, r2.user);
+    location.href = 'index.html';
+  } catch (err) {
+    alert(err.message);
+    setBtn(btn, '注 册', false);
+  }
+  return false;
+}
+</script>
+</body>
+</html>

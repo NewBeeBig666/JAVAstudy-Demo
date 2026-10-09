@@ -1,0 +1,65 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      force-response: true
+
+spring:
+  application:
+    name: learning-agent
+  # 机密配置（API Key 等）从仓库外的 application-secret.yml 加载，缺失时优雅降级为 Mock 模式
+  config:
+    import: "optional:file:./application-secret.yml"
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 12MB
+  web:
+    resources:
+      static-locations: file:../learning-agent-demo/, classpath:/META-INF/resources/, classpath:/resources/, classpath:/static/, classpath:/public/
+  datasource:
+    url: jdbc:mysql://localhost:3306/learning_agent?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+    hikari:
+      pool-name: la-hikari
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 3000
+  # 数据库迁移由 com.la.config.DbMigrationRunner 执行（classpath:db/migration/V*.sql）
+  threads:
+    virtual:
+      enabled: true
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+
+# DeepSeek 配置：api-key 为空时自动降级为 Mock 客户端（规则回复）
+deepseek:
+  base-url: https://api.deepseek.com
+  api-key: ${DEEPSEEK_API_KEY:}
+  model: deepseek-chat
+  connect-timeout: 5000
+  read-timeout: 90000
+  grade-temperature: 0.0
+  force-mock: false
+
+jwt:
+  secret: ${JWT_SECRET:la-dev-secret-key-must-be-at-least-32-bytes!!}
+  expire-hours: 12
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.la: debug

@@ -1,0 +1,65 @@
+package com.la.controller;
+
+import com.la.dto.ApiResponse;
+import com.la.dto.response.SessionDto;
+import com.la.security.CurrentUser;
+import com.la.service.SessionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Tag(name = "学习会话")
+@RestController
+@RequestMapping("/api/sessions")
+@RequiredArgsConstructor
+public class SessionController {
+
+    private final SessionService sessionService;
+
+    @Operation(summary = "会话列表")
+    @GetMapping
+    public ApiResponse<List<SessionDto>> list() {
+        return ApiResponse.ok(sessionService.list(CurrentUser.id()));
+    }
+
+    @Operation(summary = "新建会话（诊断+路径规划，返回完整会话）")
+    @PostMapping
+    public ApiResponse<SessionDto> create(@RequestBody CreateRequest req) {
+        return ApiResponse.ok(sessionService.create(CurrentUser.id(), req.getKpId()));
+    }
+
+    @Operation(summary = "会话详情（steps + messages）")
+    @GetMapping("/{id}")
+    public ApiResponse<SessionDto> detail(@PathVariable Long id) {
+        return ApiResponse.ok(sessionService.detail(CurrentUser.id(), id));
+    }
+
+    @Operation(summary = "重新规划路径")
+    @PostMapping("/{id}/replan")
+    public ApiResponse<SessionDto> replan(@PathVariable Long id) {
+        return ApiResponse.ok(sessionService.replan(CurrentUser.id(), id));
+    }
+
+    @Operation(summary = "开始某步骤（代码陪练步骤自动出练习卡片）")
+    @PostMapping("/{id}/steps/{stepNo}/start")
+    public ApiResponse<SessionDto> startStep(@PathVariable Long id, @PathVariable int stepNo) {
+        return ApiResponse.ok(sessionService.startStep(CurrentUser.id(), id, stepNo));
+    }
+
+    @Operation(summary = "完成某步骤（全部完成后会话标记 DONE）")
+    @PostMapping("/{id}/steps/{stepNo}/complete")
+    public ApiResponse<SessionDto> completeStep(@PathVariable Long id, @PathVariable int stepNo) {
+        return ApiResponse.ok(sessionService.completeStep(CurrentUser.id(), id, stepNo));
+    }
+
+    @Data
+    public static class CreateRequest {
+        @NotBlank(message = "kpId 不能为空")
+        private String kpId;
+    }
+}

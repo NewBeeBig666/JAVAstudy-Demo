@@ -1,0 +1,14 @@
+# 机密配置（含 DeepSeek API Key，严禁提交）
+application-secret.yml
+application-local.yml
+
+# 构建产物
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/

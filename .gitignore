@@ -1,31 +1,39 @@
-# 依赖 / 构建产物
+# ==================== 敏感信息（严禁上传） ====================
+# DeepSeek API Key 等机密配置（本机文件，仅本地使用）
+backend/application-secret.yml
+backend/application-local.yml
+*.env
+.env
+
+# ==================== 本地真实数据（含真实师生信息，严禁上传） ====================
+本地资料库/
+
+# ==================== 构建产物（可由依赖重新生成） ====================
+backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
 node_modules/
 dist/
 build/
-target/
 
-# 日志与中间输出
-logs/
-*.log
-outputs/
+# ==================== 本地工具（Maven 分发等，~100MB） ====================
+.tools/
 
-# 环境变量与密钥
-.env
-.env.*
-*.pem
-*.key
-*.p12
-*.pfx
-
-# IDE / 编辑器配置
+# ==================== IDE / 系统专属文件 ====================
 .idea/
 .vscode/
-*.swp
-
-# 系统临时文件
+.trae/
+.workbuddy/
+*.genie
+*.code-workspace
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# 本地工作区数据
-.workbuddy/
+# ==================== 日志与临时文件 ====================
+*.log
+logs/
+outputs/
+*.tmp
+~$*
