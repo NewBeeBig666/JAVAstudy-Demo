@@ -27,6 +27,7 @@ window.API = (function () {
   const get = p => request('GET', p);
   const post = (p, b) => request('POST', p, b === undefined ? {} : b);
   const put = (p, b) => request('PUT', p, b === undefined ? {} : b);
+  const del = p => request('DELETE', p);
 
   /**
    * SSE 流式请求（POST + ReadableStream 解析）
@@ -74,5 +75,5 @@ window.API = (function () {
     if (handlers.end) handlers.end();
   }
 
-  return { get: get, post: post, put: put, sse: sse, token: token };
+  return { get: get, post: post, put: put, del: del, sse: sse, token: token };
 })();

@@ -256,6 +256,27 @@ public class SessionService {
     }
 
     /**
+     * 清空当前用户的全部学习会话（含步骤与消息）。
+     * 仅删除 session / session_step / message 三张对话相关表，
+     * 练习记录、掌握度、作业等学习数据不受影响。
+     *
+     * @return 删除的会话数量
+     */
+    @Transactional
+    public int clearAll(Long userId) {
+        List<SessionEntity> sessions = sessionMapper.selectList(new LambdaQueryWrapper<SessionEntity>()
+                .eq(SessionEntity::getUserId, userId));
+        if (sessions.isEmpty()) {
+            return 0;
+        }
+        List<Long> ids = sessions.stream().map(SessionEntity::getId).collect(Collectors.toList());
+        messageMapper.delete(new LambdaQueryWrapper<Message>().in(Message::getSessionId, ids));
+        stepMapper.delete(new LambdaQueryWrapper<SessionStep>().in(SessionStep::getSessionId, ids));
+        sessionMapper.delete(new LambdaQueryWrapper<SessionEntity>().eq(SessionEntity::getUserId, userId));
+        return sessions.size();
+    }
+
+    /**
      * 校验会话归属并返回
      */
     public SessionEntity ownedSession(Long userId, Long sessionId) {

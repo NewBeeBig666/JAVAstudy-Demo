@@ -39,6 +39,12 @@ public class SessionController {
         return ApiResponse.ok(sessionService.detail(CurrentUser.id(), id));
     }
 
+    @Operation(summary = "清空当前用户的全部会话（含步骤与消息，不影响学习数据）")
+    @DeleteMapping
+    public ApiResponse<Integer> clearAll() {
+        return ApiResponse.ok(sessionService.clearAll(CurrentUser.id()));
+    }
+
     @Operation(summary = "重新规划路径")
     @PostMapping("/{id}/replan")
     public ApiResponse<SessionDto> replan(@PathVariable Long id) {

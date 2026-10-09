@@ -231,7 +231,7 @@
       head = `<div class="side-head"><div class="side-title">学习会话</div>
         <div class="side-tools">
           <button class="icon-btn" data-act="newSession" title="新建会话">${icon('plus', 16)}</button>
-          <button class="icon-btn" data-act="clearSessions" title="清空会话（演示空状态）">${icon('trash', 16)}</button>
+          <button class="icon-btn" data-act="clearSessions" title="清空全部对话">${icon('trash', 16)}</button>
         </div></div>`;
       foot = `<button class="btn primary block" data-act="newSession">${icon('plus', 15)} 新建学习会话</button>`;
       const act = DB.sessions.filter(s => s.status === 'active');
@@ -1211,6 +1211,13 @@
       foot = `<button class="btn" data-act="closeModal">取消</button>
         <button class="btn primary" data-act="createSession" ${d.kp ? '' : 'disabled'}>${icon('sparkles', 15)} 创建并生成学习路径</button>`;
 
+    } else if (m.type === 'clearSessions') {
+      title = '清空全部对话';
+      body = `<div class="note" style="margin-bottom:12px">即将删除你的 <b>${DB.sessions.length}</b> 个学习会话及全部对话消息，<b style="color:var(--danger)">操作不可恢复</b>。你的练习记录、作业、知识掌握度等学习数据不受影响。</div>
+        <div class="hint">清空后可随时新建会话，智能体会基于你的最新学习数据重新诊断规划。</div>`;
+      foot = `<button class="btn" data-act="closeModal" ${d.busy ? 'disabled' : ''}>取消</button>
+        <button class="btn danger" data-act="doClearSessions" ${d.busy ? 'disabled' : ''}>${icon('trash', 15)} ${d.busy ? '清空中…' : '确认清空'}</button>`;
+
     } else if (m.type === 'submitHw') {
       const a = DB.assignments.find(x => x.id === m.data.asId);
       title = '提交作业 · ' + a.title;
@@ -1413,7 +1420,25 @@
         toast('会话已创建，路径已生成', 'ok');
       } catch (e) { toast(e.message); }
     },
-    clearSessions() { toast('MVP 版本会话保存在数据库中，暂不支持清空'); },
+    clearSessions() {
+      if (!DB.sessions.length) { toast('当前没有可清空的对话'); return; }
+      State.modal = { type: 'clearSessions', data: { busy: false } }; renderOverlays();
+    },
+    async doClearSessions() {
+      const d = State.modal.data;
+      if (d.busy) return;
+      d.busy = true; renderOverlays();
+      try {
+        await API.del('/sessions');
+        DB.sessions = [];
+        State.sessionId = null;
+        State.modal = null; renderOverlays(); render();
+        toast('对话记录已全部清空', 'ok');
+      } catch (e) {
+        d.busy = false; State.modal = null; renderOverlays();
+        toast(e.message);
+      }
+    },
     async replan() {
       const s = session(); if (!s) return;
       toast('正在重新规划…');
