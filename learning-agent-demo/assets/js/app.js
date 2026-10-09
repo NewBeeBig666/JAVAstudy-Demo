@@ -97,7 +97,8 @@
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
     inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
     route: '<circle cx="6" cy="19" r="3"/><circle cx="6" cy="5" r="3"/><circle cx="18" cy="19" r="3"/><path d="M9 19h5a2 2 0 0 0 2-2V7"/><path d="M9 5h3a2 2 0 0 1 2 2v3"/>',
-    flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>'
+    flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
+    dots: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'
   };
   const icon = (n, s, c) => '<svg class="ico ' + (c || '') + '" width="' + (s || 18) + '" height="' + (s || 18) +
     '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
@@ -1032,7 +1033,8 @@
           <td><span class="badge ${s.risk === 'high' ? 'danger' : s.risk === 'mid' ? 'warn' : 'ok'}">${s.risk === 'high' ? '高危' : s.risk === 'mid' ? '关注' : '正常'}</span></td>
         </tr>`).join('')}</tbody>
       </table></div></div>
-      ${sel ? `<div class="card"><div class="card-head">${icon('user', 15)}<h3>${sel.name} · 学生档案</h3><div class="spacer"></div>
+      ${sel ? `<div class="card"><div class="card-head">${icon('user', 15)}<h3>${sel.name} · 学生档案</h3>
+        <button class="btn sm ghost" data-act="resetPwdModal" ${sel ? '' : 'disabled'} title="更多操作">${icon('dots', 14)} 更多</button><div class="spacer"></div>
         <span class="badge ${sel.risk === 'high' ? 'danger' : sel.risk === 'mid' ? 'warn' : 'ok'}">${sel.risk === 'high' ? '高危' : sel.risk === 'mid' ? '关注' : '正常'}</span></div>
         <div class="card-body">
           <div class="stat-row" style="margin-bottom:14px">
@@ -1239,6 +1241,13 @@
         <div class="hint">清空后可随时新建会话，智能体会基于你的最新学习数据重新诊断规划。</div>`;
       foot = `<button class="btn" data-act="closeModal" ${d.busy ? 'disabled' : ''}>取消</button>
         <button class="btn danger" data-act="doClearSessions" ${d.busy ? 'disabled' : ''}>${icon('trash', 15)} ${d.busy ? '清空中…' : '确认清空'}</button>`;
+
+    } else if (m.type === 'resetPwd') {
+      title = '重置学生密码';
+      body = `<div class="note warn" style="margin-bottom:12px">确定要将学生 <b>${h(d.name)}</b> 的登录密码重置为统一初始密码 <b>GZgs@2026</b> 吗？</div>
+        <div class="hint">重置后该学生需使用学号 + 初始密码 GZgs@2026 重新登录，登录后可在账号设置中自行修改密码。</div>`;
+      foot = `<button class="btn" data-act="closeModal" ${d.busy ? 'disabled' : ''}>取消</button>
+        <button class="btn danger" data-act="doResetPwd" ${d.busy ? 'disabled' : ''}>${d.busy ? '重置中…' : '确认重置'}</button>`;
 
     } else if (m.type === 'submitHw') {
       const a = DB.assignments.find(x => x.id === m.data.asId);
@@ -1740,6 +1749,25 @@
         const sc = document.querySelector('.main-body');
         if (sc) sc.scrollTo({ top: sc.scrollHeight, behavior: 'smooth' });
       });
+    },
+    resetPwdModal() {
+      const sel = DB.students.find(s => s.id === State.activeStudent);
+      if (!sel) { toast('请先在列表中选择一名学生'); return; }
+      State.modal = { type: 'resetPwd', data: { sid: sel.id, name: sel.name, busy: false } };
+      renderOverlays();
+    },
+    async doResetPwd() {
+      const d = State.modal.data;
+      if (d.busy) return;
+      d.busy = true; renderOverlays();
+      try {
+        await API.post('/teacher/students/' + d.sid + '/reset-password');
+        State.modal = null; renderOverlays();
+        toast('已将「' + d.name + '」的密码重置为初始密码 GZgs@2026', 'ok');
+      } catch (e) {
+        d.busy = false; renderOverlays();
+        toast('重置失败：' + e.message);
+      }
     },
     publishModal() { State.modal = { type: 'publish', data: { kp: [], tpl: 'coding' } }; renderOverlays(); },
     pubKp(v) {

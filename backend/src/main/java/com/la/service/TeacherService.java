@@ -9,6 +9,7 @@ import com.la.exception.BizException;
 import com.la.mapper.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ public class TeacherService {
     private final ExerciseRecordMapper exerciseRecordMapper;
     private final DailyActivityMapper dailyActivityMapper;
     private final WarningMapper warningMapper;
+    private final PasswordEncoder passwordEncoder;
     private final LlmClient llmClient;
     private final AgentPrompts agentPrompts;
     private final NotificationService notificationService;
@@ -171,6 +173,27 @@ public class TeacherService {
 
         return new StudentSummary(String.valueOf(stu.getId()), stu.getRealName(), mastery, submitRate,
                 absDays, risk, weakKps.stream().map(kpNames::get).toList(), trend, attempts);
+    }
+
+    /**
+     * 重置学生密码为统一初始密码 GZgs@2026（BCrypt 存储）
+     * 权限约束：学生须属于当前教师授课的班级（教师无授课班级时回退兼容演示账号）
+     */
+    @Transactional
+    public String resetStudentPassword(Long teacherId, Long studentId) {
+        User stu = userMapper.selectById(studentId);
+        if (stu == null || !"STUDENT".equals(stu.getRole())) {
+            throw new BizException("学生不存在");
+        }
+        List<Long> ownClassIds = classMapper.selectList(new LambdaQueryWrapper<ClassEntity>()
+                        .eq(ClassEntity::getTeacherId, teacherId))
+                .stream().map(ClassEntity::getId).toList();
+        if (!ownClassIds.isEmpty() && (stu.getClassId() == null || !ownClassIds.contains(stu.getClassId()))) {
+            throw new BizException("无权操作该学生");
+        }
+        stu.setPasswordHash(passwordEncoder.encode("GZgs@2026"));
+        userMapper.updateById(stu);
+        return stu.getRealName();
     }
 
     /**

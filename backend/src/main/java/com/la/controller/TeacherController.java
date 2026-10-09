@@ -63,6 +63,13 @@ public class TeacherController {
         return ApiResponse.ok(teacherService.studentList(classId != null ? classId : defaultClassId()));
     }
 
+    @Operation(summary = "重置学生密码为统一初始密码 GZgs@2026")
+    @PostMapping("/students/{id}/reset-password")
+    public ApiResponse<Void> resetStudentPassword(@PathVariable Long id) {
+        teacherService.resetStudentPassword(CurrentUser.id(), id);
+        return ApiResponse.ok();
+    }
+
     @Operation(summary = "作业列表（教师视角，含草稿）")
     @GetMapping("/assignments")
     public ApiResponse<List<Map<String, Object>>> assignments(@RequestParam(required = false) Long classId) {
