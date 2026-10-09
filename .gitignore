@@ -37,3 +37,6 @@ logs/
 outputs/
 *.tmp
 ~$*
+
+# 旧 demo 仓库本地备份（仅供本机回溯，不上传）
+.git-old-demo-backup/
