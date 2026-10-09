@@ -943,6 +943,13 @@
 
   function viewSubmissions() {
     const a = DB.assignments.find(x => x.id === State.filters.subAs) || DB.assignments[0];
+    if (!a) {
+      return {
+        head: mainHead('提交批改', '按作业查看学生提交与批改',
+          '<button class="btn primary sm" data-act="publishModal">' + icon('plus', 14) + ' 发布新作业</button>'),
+        body: emptyBox('还没有作业', '先在「作业管理」发布作业，学生提交后会实时出现在这里，支持 AI 初评 + Rubric 人工复核。')
+      };
+    }
     const list = DB.submissions.filter(s => s.asId === a.id);
     const pend = list.filter(s => s.status === 'pending').length;
     const head = mainHead('提交批改', h(a.title) + ' · 共 ' + list.length + ' 条记录 · ' + pend + ' 份待批改');
@@ -1128,6 +1135,9 @@
   function ctxHomework() {
     if (State.role === 'teacher') {
       const a = DB.assignments.find(x => x.id === State.filters.subAs) || DB.assignments[0];
+      if (!a) {
+        return '<div class="ctx-card"><h4>当前作业</h4><div style="font-size:12.5px;color:var(--text-3)">还没有作业，发布后这里会显示作业详情与 Rubric 评分标准。</div></div>';
+      }
       return `<div class="ctx-card"><h4>当前作业</h4>
         <div style="font-size:13.5px;font-weight:650;margin-bottom:6px">${h(a.title)}</div>
         <div class="ctx-kv"><span>状态</span><span>${a.status === 'draft' ? '草稿' : a.status === 'ongoing' ? '进行中' : '已截止'}</span></div>
