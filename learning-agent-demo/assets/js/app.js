@@ -1739,10 +1739,19 @@
       } catch (e) { toast(e.message); }
     },
     studentPick(v) {
+      // 修复：render() 全量重建 #side 会令左侧名单 .side-body 的 scrollTop 归零，
+      // 表现为点击学生后名单自动滚回顶部。渲染前记录滚动位置、渲染后恢复。
+      // 仅在已处于学生视图时保持（从看板等入口首次进入学生视图时列表为新内容，无需恢复）。
+      const keepSide = State.section === 'students' ? document.querySelector('.side-body') : null;
+      const keepTop = keepSide ? keepSide.scrollTop : 0;
       State.activeStudent = v;
       State.rightTab = 'knowledge'; State.rightOpen = true;
       if (State.section !== 'students') { State.section = 'students'; }
       render();
+      if (keepSide) {
+        const nb = document.querySelector('.side-body');
+        if (nb) nb.scrollTop = keepTop;
+      }
       // 点击学生（左侧列表 / 中间列表 / 看板入口）后：中间列表平滑下滑至底部，
       // 完整展示该生档案卡。rAF 确保重绘布局完成后启动原生平滑滚动（无 JS 动画开销）
       requestAnimationFrame(() => {
@@ -1770,11 +1779,13 @@
       }
     },
     publishModal() { State.modal = { type: 'publish', data: { kp: [], tpl: 'coding' } }; renderOverlays(); },
-    pubKp(v) {
+    pubKp(v, id, t) {
       const d = State.modal.data; d.kp = d.kp || [];
       const i = d.kp.indexOf(v);
       if (i >= 0) d.kp.splice(i, 1); else d.kp.push(v);
-      renderOverlays();
+      // 局部切换当前 chip 的选中态：若整窗 innerHTML 重建，mask/modal 的
+      // 入场动画（fade/pop）会被重放，造成点击时的闪屏；改为直接改 class。
+      if (t && t.classList) t.classList.toggle('on', i < 0);
     },
     async doPublish() {
       const d = State.modal.data;
