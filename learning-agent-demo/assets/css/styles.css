@@ -68,7 +68,8 @@ button { cursor: pointer; border: none; background: none; padding: 0; }
   border-bottom: 1px solid var(--border);
   z-index: 30;
 }
-.brand { display: flex; align-items: center; gap: 9px; min-width: 200px; }
+/* 限定作用域：避免与 .badge.brand 等复用 brand 类名的元素冲突（min-width 会挤压同行的标题） */
+.topbar .brand { display: flex; align-items: center; gap: 9px; min-width: 200px; }
 .brand-mark {
   width: 28px; height: 28px; border-radius: 8px;
   background: linear-gradient(135deg, var(--brand-2), #8b5cf6);
